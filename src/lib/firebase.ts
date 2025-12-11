@@ -3,13 +3,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBGRCgrH3CUaCZNp1GQCNg9SrSVh-H__UE",
+  apiKey: "AIzaSyBGRCgrH3CUaCZNp1G0CNg9SrSVh-H__UE",
   authDomain: "cineverse-web.firebaseapp.com",
   projectId: "cineverse-web",
-  storageBucket: "cineverse-web.appspot.com",
+  storageBucket: "cineverse-web.firebasestorage.app",
   messagingSenderId: "677543971674",
   appId: "1:677543971674:web:574c55cc37f133361dc163",
-  measurementId: "G-EEXLZIPEYF"
+  measurementId: "G-EEXLZTPEYF"
 };
 
 const app = initializeApp(firebaseConfig);
