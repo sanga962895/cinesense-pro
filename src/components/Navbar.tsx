@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Bookmark, Film, Flame, Star, Calendar } from 'lucide-react';
+import { Search, Menu, X, Bookmark, Film, Flame, Star, Calendar, LogIn, LogOut, User } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import { useWatchlist } from '@/hooks/useWatchlist';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWatchlistSync } from '@/hooks/useWatchlistSync';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
@@ -19,8 +21,11 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const { watchlistCount } = useWatchlist();
+  const { user, logout } = useAuth();
+  const { watchlistCount } = useWatchlistSync(user);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const debouncedSearch = useDebounce(localSearchQuery, 300);
 
   useEffect(() => {
@@ -36,6 +41,23 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
       onSearch(debouncedSearch);
     }
   }, [debouncedSearch, onSearch]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: 'Logged out',
+        description: 'You have been successfully logged out.',
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to log out.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const navLinks = [
     { to: '/', label: 'Home', icon: Film },
@@ -129,6 +151,26 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
 
               <ThemeToggle />
 
+              {/* Auth Button */}
+              {user ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="hidden md:flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden lg:inline">Logout</span>
+                </Button>
+              ) : (
+                <Link to="/login" className="hidden md:block">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <LogIn className="w-4 h-4" />
+                    <span className="hidden lg:inline">Login</span>
+                  </Button>
+                </Link>
+              )}
+
               {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
@@ -172,6 +214,21 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                 </Button>
               </div>
 
+              {/* User Info */}
+              {user && (
+                <div className="p-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-medium truncate">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">Signed in</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Mobile Search */}
               <div className="p-4">
                 <div className="relative">
@@ -206,6 +263,31 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                     </Link>
                   );
                 })}
+
+                {/* Auth Links */}
+                <div className="pt-4 border-t border-border">
+                  {user ? (
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-secondary transition-colors w-full"
+                    >
+                      <LogOut className="w-5 h-5 text-destructive" />
+                      <span className="font-medium">Logout</span>
+                    </button>
+                  ) : (
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-secondary transition-colors"
+                    >
+                      <LogIn className="w-5 h-5 text-primary" />
+                      <span className="font-medium">Login</span>
+                    </Link>
+                  )}
+                </div>
               </nav>
             </motion.div>
           </>

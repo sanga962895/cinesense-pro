@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Trash2, Clock, Star, Film } from 'lucide-react';
+import { ArrowLeft, Trash2, Clock, Star, Film, Cloud, CloudOff } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import MovieCard from '@/components/MovieCard';
 import MovieModal from '@/components/MovieModal';
-import { useWatchlist, WatchlistItem } from '@/hooks/useWatchlist';
-import { TMDBMovie, getImageUrl } from '@/api/tmdb';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWatchlistSync, WatchlistItem } from '@/hooks/useWatchlistSync';
+import { TMDBMovie } from '@/api/tmdb';
 import { Button } from '@/components/ui/button';
 import { 
   AlertDialog,
@@ -21,7 +22,8 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const WatchlistPage = () => {
-  const { watchlist, removeFromWatchlist, clearWatchlist } = useWatchlist();
+  const { user } = useAuth();
+  const { watchlist, removeFromWatchlist, clearWatchlist, syncing } = useWatchlistSync(user);
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -53,9 +55,19 @@ const WatchlistPage = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="font-display text-4xl md:text-5xl text-foreground">My Watchlist</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-4xl md:text-5xl text-foreground">My Watchlist</h1>
+                {syncing ? (
+                  <Cloud className="w-5 h-5 text-primary animate-pulse" />
+                ) : user ? (
+                  <Cloud className="w-5 h-5 text-green-500" />
+                ) : (
+                  <CloudOff className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
               <p className="text-muted-foreground mt-1">
                 {watchlist.length} {watchlist.length === 1 ? 'movie' : 'movies'} saved
+                {user && ' • Synced to cloud'}
               </p>
             </div>
           </div>

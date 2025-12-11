@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import { TMDBMovieDetails, getMovieDetails, getImageUrl, TMDBCastMember } from '@/api/tmdb';
 import { getMovieByTitle, parseRatings } from '@/api/omdb';
-import { useWatchlist } from '@/hooks/useWatchlist';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWatchlistSync } from '@/hooks/useWatchlistSync';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,7 +32,8 @@ const MovieModal = ({ movieId, isOpen, onClose, onShowSimilar }: MovieModalProps
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { user } = useAuth();
+  const { isInWatchlist, toggleWatchlist } = useWatchlistSync(user);
 
   useEffect(() => {
     if (movieId && isOpen) {

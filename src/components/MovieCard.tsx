@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Plus, Check, Play, Info } from 'lucide-react';
 import { TMDBMovie, getImageUrl } from '@/api/tmdb';
-import { useWatchlist } from '@/hooks/useWatchlist';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWatchlistSync } from '@/hooks/useWatchlistSync';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -16,7 +17,8 @@ interface MovieCardProps {
 const MovieCard = ({ movie, index = 0, onClick, variant = 'default' }: MovieCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { user } = useAuth();
+  const { isInWatchlist, toggleWatchlist } = useWatchlistSync(user);
   const inWatchlist = isInWatchlist(movie.id);
 
   const handleWatchlistClick = (e: React.MouseEvent) => {
