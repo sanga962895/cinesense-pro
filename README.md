@@ -347,4 +347,4 @@ This project is for educational purposes.
 
 ---
 
-Built with ❤️ using [Lovable](https://lovable.dev)
+Built with SAngam 
