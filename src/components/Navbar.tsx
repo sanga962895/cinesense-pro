@@ -1,3 +1,19 @@
+/**
+ * Navbar Component
+ * 
+ * The main navigation header for the CineVerse application.
+ * Provides navigation links, search functionality, and user authentication controls.
+ * 
+ * Features:
+ * - Responsive design with desktop and mobile layouts
+ * - Glassmorphism effect on scroll
+ * - Debounced search input
+ * - Theme toggle (dark/light mode)
+ * - User authentication state display
+ * - Mobile slide-out menu with animations
+ * - Watchlist badge with item count
+ */
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,23 +27,43 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * Props for Navbar component
+ * @property onSearch - Callback when search query changes
+ * @property searchQuery - Current search query value
+ */
 interface NavbarProps {
   onSearch?: (query: string) => void;
   searchQuery?: string;
 }
 
 const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
+  // Track scroll position for glassmorphism effect
   const [isScrolled, setIsScrolled] = useState(false);
+  // Mobile menu open/close state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Local search input state
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  // Track search input focus for width animation
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
+  // Auth context for user state and logout
   const { user, logout } = useAuth();
+  // Get watchlist count for badge
   const { watchlistCount } = useWatchlistSync(user);
+  
+  // React Router hooks
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(localSearchQuery, 300);
 
+  /**
+   * Add scroll listener to apply glassmorphism effect
+   * Effect activates when scrolled more than 50px
+   */
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -36,12 +72,20 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  /**
+   * Trigger search callback when debounced value changes
+   * This prevents excessive API calls while typing
+   */
   useEffect(() => {
     if (onSearch) {
       onSearch(debouncedSearch);
     }
   }, [debouncedSearch, onSearch]);
 
+  /**
+   * Handle user logout with toast notifications
+   * Navigates to home page after successful logout
+   */
   const handleLogout = async () => {
     try {
       await logout();
@@ -59,6 +103,10 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
     }
   };
 
+  /**
+   * Navigation links configuration
+   * Each link has an icon, label, and optional badge count
+   */
   const navLinks = [
     { to: '/', label: 'Home', icon: Film },
     { to: '/?section=trending', label: 'Trending', icon: Flame },
@@ -69,17 +117,19 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
 
   return (
     <>
+      {/* Main Header - Fixed to top */}
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'glass-effect shadow-lg' 
-            : 'bg-gradient-to-b from-background/80 to-transparent'
+            ? 'glass-effect shadow-lg'  // Glassmorphism when scrolled
+            : 'bg-gradient-to-b from-background/80 to-transparent' // Transparent gradient at top
         }`}
       >
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
+            
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
               <motion.div
@@ -93,10 +143,13 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* ============================================
+                DESKTOP NAVIGATION
+                ============================================ */}
             <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;
+                // Determine if this link is currently active
                 const isActive = location.pathname === link.to.split('?')[0] && 
                   (link.to.includes('?') 
                     ? location.search.includes(link.to.split('?')[1]) 
@@ -114,11 +167,13 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                   >
                     <Icon className="w-4 h-4" />
                     <span className="text-sm font-medium">{link.label}</span>
+                    {/* Badge for watchlist count */}
                     {link.badge && link.badge > 0 && (
                       <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                         {link.badge}
                       </Badge>
                     )}
+                    {/* Animated underline for active link */}
                     {isActive && (
                       <motion.div
                         layoutId="activeNav"
@@ -130,9 +185,11 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
               })}
             </nav>
 
-            {/* Search & Actions */}
+            {/* ============================================
+                SEARCH & ACTIONS
+                ============================================ */}
             <div className="flex items-center gap-2 md:gap-4">
-              {/* Search Bar */}
+              {/* Desktop Search Bar - Expands on focus */}
               <motion.div
                 animate={{ width: isSearchFocused ? 280 : 200 }}
                 className="hidden md:flex items-center relative"
@@ -149,9 +206,10 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                 />
               </motion.div>
 
+              {/* Theme Toggle Button */}
               <ThemeToggle />
 
-              {/* Auth Button */}
+              {/* Desktop Auth Button */}
               {user ? (
                 <Button
                   variant="ghost"
@@ -171,7 +229,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                 </Link>
               )}
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Toggle Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -185,10 +243,13 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
         </div>
       </motion.header>
 
-      {/* Mobile Menu */}
+      {/* ============================================
+          MOBILE MENU - Slide-out drawer
+          ============================================ */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
+            {/* Backdrop overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -196,6 +257,8 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
               className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
+            
+            {/* Slide-out menu panel */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -203,6 +266,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed top-0 right-0 bottom-0 w-80 bg-card border-l border-border z-50 lg:hidden"
             >
+              {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <span className="font-display text-xl">Menu</span>
                 <Button
@@ -214,7 +278,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                 </Button>
               </div>
 
-              {/* User Info */}
+              {/* User Info Section (if logged in) */}
               {user && (
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3">
@@ -229,7 +293,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                 </div>
               )}
 
-              {/* Mobile Search */}
+              {/* Mobile Search Bar */}
               <div className="p-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -243,6 +307,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                 </div>
               </div>
 
+              {/* Mobile Navigation Links */}
               <nav className="p-4 space-y-2">
                 {navLinks.map((link) => {
                   const Icon = link.icon;
@@ -264,7 +329,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                   );
                 })}
 
-                {/* Auth Links */}
+                {/* Mobile Auth Links */}
                 <div className="pt-4 border-t border-border">
                   {user ? (
                     <button
@@ -294,7 +359,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
         )}
       </AnimatePresence>
 
-      {/* Spacer */}
+      {/* Spacer to prevent content from hiding under fixed header */}
       <div className="h-16 md:h-20" />
     </>
   );

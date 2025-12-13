@@ -1,3 +1,24 @@
+/**
+ * MovieForm Component
+ * 
+ * A comprehensive filter form for the movie recommendation system.
+ * Allows users to select preferences for personalized movie suggestions.
+ * 
+ * Filter Categories:
+ * - Genres: Action, Comedy, Drama, etc.
+ * - Moods: Fun, Emotional, Dark, etc.
+ * - Minimum Rating: Slider from 0-9
+ * - Language: English, Hindi, Korean, etc.
+ * - Release Era: 2020s, 2010s, Classic, etc.
+ * - Runtime: Short (<120 min) or Long (>120 min)
+ * 
+ * Features:
+ * - Expandable advanced filters section
+ * - Active filter count display
+ * - Reset filters functionality
+ * - Animated button interactions
+ */
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Filter, X, RotateCcw } from 'lucide-react';
@@ -7,6 +28,13 @@ import { Slider } from '@/components/ui/slider';
 import { genres, moods, languages, yearRanges, runtimeOptions } from '@/data/moviesData';
 import { RecommendationFilters } from '@/lib/recommendation';
 
+/**
+ * Props for MovieForm component
+ * @property filters - Current filter state object
+ * @property onFiltersChange - Callback when any filter changes
+ * @property onSubmit - Callback when user clicks "Get Recommendations"
+ * @property isLoading - Shows loading spinner on submit button
+ */
 interface MovieFormProps {
   filters: RecommendationFilters;
   onFiltersChange: (filters: RecommendationFilters) => void;
@@ -15,15 +43,24 @@ interface MovieFormProps {
 }
 
 const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormProps) => {
+  // Track whether advanced filters section is expanded
   const [isExpanded, setIsExpanded] = useState(false);
 
+  /**
+   * Toggle a genre selection on/off
+   * @param genre - Genre value to toggle
+   */
   const toggleGenre = (genre: string) => {
     const newGenres = filters.genres.includes(genre)
-      ? filters.genres.filter(g => g !== genre)
-      : [...filters.genres, genre];
+      ? filters.genres.filter(g => g !== genre) // Remove if exists
+      : [...filters.genres, genre]; // Add if doesn't exist
     onFiltersChange({ ...filters, genres: newGenres });
   };
 
+  /**
+   * Toggle a mood selection on/off
+   * @param mood - Mood value to toggle
+   */
   const toggleMood = (mood: string) => {
     const newMoods = filters.moods.includes(mood)
       ? filters.moods.filter(m => m !== mood)
@@ -31,6 +68,10 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
     onFiltersChange({ ...filters, moods: newMoods });
   };
 
+  /**
+   * Reset all filters to default values
+   * Clears genres, moods, rating, language, year range, and runtime
+   */
   const resetFilters = () => {
     onFiltersChange({
       genres: [],
@@ -43,6 +84,7 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
     });
   };
 
+  // Calculate total number of active (non-default) filters
   const activeFiltersCount = 
     filters.genres.length + 
     filters.moods.length + 
@@ -56,9 +98,10 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
       animate={{ opacity: 1, y: 0 }}
       className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border p-6 mb-8"
     >
-      {/* Header */}
+      {/* Form Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
+          {/* Filter icon */}
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Filter className="w-5 h-5 text-primary" />
           </div>
@@ -67,6 +110,7 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
             <p className="text-sm text-muted-foreground">Use filters to discover personalized recommendations</p>
           </div>
         </div>
+        {/* Reset button - only shown when filters are active */}
         {activeFiltersCount > 0 && (
           <Button variant="ghost" size="sm" onClick={resetFilters} className="text-muted-foreground">
             <RotateCcw className="w-4 h-4 mr-2" />
@@ -75,8 +119,11 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
         )}
       </div>
 
-      {/* Genre Selection */}
+      {/* Filter Sections */}
       <div className="space-y-4">
+        {/* ============================================
+            GENRE SELECTION - Always visible
+            ============================================ */}
         <div>
           <label className="text-sm font-medium text-foreground mb-3 block">Genres</label>
           <div className="flex flex-wrap gap-2">
@@ -98,7 +145,9 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
           </div>
         </div>
 
-        {/* Mood Selection */}
+        {/* ============================================
+            MOOD SELECTION - Always visible
+            ============================================ */}
         <div>
           <label className="text-sm font-medium text-foreground mb-3 block">Mood</label>
           <div className="flex flex-wrap gap-2">
@@ -121,7 +170,9 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
           </div>
         </div>
 
-        {/* Expandable Filters */}
+        {/* ============================================
+            EXPANDABLE ADVANCED FILTERS
+            ============================================ */}
         <motion.div
           animate={{ height: isExpanded ? 'auto' : 0 }}
           className="overflow-hidden"
@@ -149,8 +200,9 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
               </div>
             </div>
 
+            {/* Three-column grid for Language, Era, Runtime */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Language */}
+              {/* Language Filter */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-3 block">Language</label>
                 <div className="flex flex-wrap gap-2">
@@ -184,7 +236,7 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
                 </div>
               </div>
 
-              {/* Year Range */}
+              {/* Release Year Range Filter */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-3 block">Release Era</label>
                 <div className="flex flex-wrap gap-2">
@@ -209,7 +261,7 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
                 </div>
               </div>
 
-              {/* Runtime */}
+              {/* Runtime Filter */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-3 block">Runtime</label>
                 <div className="flex flex-wrap gap-2">
@@ -237,8 +289,9 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
           </div>
         </motion.div>
 
-        {/* Toggle & Submit */}
+        {/* Toggle Expand Button & Submit Button */}
         <div className="flex items-center gap-4 pt-4">
+          {/* Expand/Collapse advanced filters */}
           <Button
             variant="ghost"
             size="sm"
@@ -249,12 +302,14 @@ const MovieForm = ({ filters, onFiltersChange, onSubmit, isLoading }: MovieFormP
             {isExpanded ? 'Less Filters' : 'More Filters'}
           </Button>
           
+          {/* Submit button with loading state */}
           <Button
             onClick={onSubmit}
             disabled={isLoading}
             className="flex-1 md:flex-none md:px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
           >
             {isLoading ? (
+              // Loading spinner
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
