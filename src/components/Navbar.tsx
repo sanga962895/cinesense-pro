@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X, Bookmark, Film, Flame, Star, Calendar, LogIn, LogOut, User } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
@@ -55,6 +55,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
   // React Router hooks
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   
   // Debounce search to prevent excessive API calls
@@ -108,12 +109,29 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
    * Each link has an icon, label, and optional badge count
    */
   const navLinks = [
-    { to: '/', label: 'Home', icon: Film },
-    { to: '/?section=trending', label: 'Trending', icon: Flame },
-    { to: '/?section=top-rated', label: 'Top Rated', icon: Star },
-    { to: '/?section=upcoming', label: 'Upcoming', icon: Calendar },
-    { to: '/watchlist', label: 'Watchlist', icon: Bookmark, badge: watchlistCount },
+    { to: '/', label: 'Home', icon: Film, section: null },
+    { to: '/?section=trending', label: 'Trending', icon: Flame, section: 'trending' },
+    { to: '/?section=top-rated', label: 'Top Rated', icon: Star, section: 'top-rated' },
+    { to: '/?section=upcoming', label: 'Upcoming', icon: Calendar, section: 'upcoming' },
+    { to: '/watchlist', label: 'Watchlist', icon: Bookmark, badge: watchlistCount, section: undefined },
   ];
+
+  /**
+   * Handle navigation link click
+   * For home page sections, use setSearchParams to properly update URL
+   */
+  const handleNavClick = (e: React.MouseEvent, link: typeof navLinks[0]) => {
+    if (location.pathname === '/' && link.section !== undefined) {
+      e.preventDefault();
+      if (link.section === null) {
+        // Home - clear section param
+        setSearchParams({});
+      } else {
+        // Section - set section param
+        setSearchParams({ section: link.section });
+      }
+    }
+  };
 
   return (
     <>
@@ -159,6 +177,7 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                   <Link
                     key={link.to}
                     to={link.to}
+                    onClick={(e) => handleNavClick(e, link)}
                     className={`relative px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                       isActive 
                         ? 'text-primary' 
@@ -315,7 +334,10 @@ const Navbar = ({ onSearch, searchQuery = '' }: NavbarProps) => {
                     <Link
                       key={link.to}
                       to={link.to}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        handleNavClick(e, link);
+                        setIsMobileMenuOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-secondary transition-colors"
                     >
                       <Icon className="w-5 h-5 text-primary" />

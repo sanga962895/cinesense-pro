@@ -35,9 +35,13 @@ const Index = () => {
   const section = searchParams.get('section');
 
   // Refs for scrolling to sections
+  const heroRef = useRef<HTMLDivElement>(null);
   const trendingRef = useRef<HTMLDivElement>(null);
   const topRatedRef = useRef<HTMLDivElement>(null);
   const upcomingRef = useRef<HTMLDivElement>(null);
+
+  // Track highlighted section for animation
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
 
   // ============================================
   // STATE: Movie Data from TMDB API
@@ -120,23 +124,30 @@ const Index = () => {
    * Effect: Scroll to section when URL param changes
    */
   useEffect(() => {
-    if (!section) return;
-    
-    const scrollToRef = (ref: React.RefObject<HTMLDivElement>) => {
+    const scrollToRef = (ref: React.RefObject<HTMLDivElement>, sectionName: string) => {
       setTimeout(() => {
         ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Trigger highlight animation
+        setHighlightedSection(sectionName);
+        setTimeout(() => setHighlightedSection(null), 1500);
       }, 100);
     };
 
+    // If no section, scroll to top (Home)
+    if (section === null) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     switch (section) {
       case 'trending':
-        scrollToRef(trendingRef);
+        scrollToRef(trendingRef, 'trending');
         break;
       case 'top-rated':
-        scrollToRef(topRatedRef);
+        scrollToRef(topRatedRef, 'top-rated');
         break;
       case 'upcoming':
-        scrollToRef(upcomingRef);
+        scrollToRef(upcomingRef, 'upcoming');
         break;
     }
   }, [section]);
@@ -247,7 +258,12 @@ const Index = () => {
             )}
 
             {/* Movie Category Rows */}
-            <div ref={trendingRef} className="scroll-mt-24">
+            <div 
+              ref={trendingRef} 
+              className={`scroll-mt-24 transition-all duration-500 ${
+                highlightedSection === 'trending' ? 'ring-2 ring-primary/50 rounded-2xl bg-primary/5' : ''
+              }`}
+            >
               <MovieRow 
                 title="Trending Now" 
                 movies={trending} 
@@ -263,7 +279,12 @@ const Index = () => {
               icon="sparkles" 
               onMovieClick={handleMovieClick} 
             />
-            <div ref={topRatedRef} className="scroll-mt-24">
+            <div 
+              ref={topRatedRef} 
+              className={`scroll-mt-24 transition-all duration-500 ${
+                highlightedSection === 'top-rated' ? 'ring-2 ring-primary/50 rounded-2xl bg-primary/5' : ''
+              }`}
+            >
               <MovieRow 
                 title="Top Rated" 
                 movies={topRated} 
@@ -272,7 +293,12 @@ const Index = () => {
                 onMovieClick={handleMovieClick} 
               />
             </div>
-            <div ref={upcomingRef} className="scroll-mt-24">
+            <div 
+              ref={upcomingRef} 
+              className={`scroll-mt-24 transition-all duration-500 ${
+                highlightedSection === 'upcoming' ? 'ring-2 ring-primary/50 rounded-2xl bg-primary/5' : ''
+              }`}
+            >
               <MovieRow 
                 title="Upcoming" 
                 movies={upcoming} 
