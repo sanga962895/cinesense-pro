@@ -16,7 +16,8 @@
  * - Local recommendation engine for filtered results
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import MovieForm from '@/components/MovieForm';
@@ -29,6 +30,15 @@ import { getRecommendations, RecommendationFilters, ScoredMovie } from '@/lib/re
 import { useDebounce } from '@/hooks/useDebounce';
 
 const Index = () => {
+  // Read URL search params for section navigation
+  const [searchParams] = useSearchParams();
+  const section = searchParams.get('section');
+
+  // Refs for scrolling to sections
+  const trendingRef = useRef<HTMLDivElement>(null);
+  const topRatedRef = useRef<HTMLDivElement>(null);
+  const upcomingRef = useRef<HTMLDivElement>(null);
+
   // ============================================
   // STATE: Movie Data from TMDB API
   // ============================================
@@ -105,6 +115,31 @@ const Index = () => {
       setIsLoading(prev => ({ ...prev, upcoming: false })); 
     });
   }, []);
+
+  /**
+   * Effect: Scroll to section when URL param changes
+   */
+  useEffect(() => {
+    if (!section) return;
+    
+    const scrollToRef = (ref: React.RefObject<HTMLDivElement>) => {
+      setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    };
+
+    switch (section) {
+      case 'trending':
+        scrollToRef(trendingRef);
+        break;
+      case 'top-rated':
+        scrollToRef(topRatedRef);
+        break;
+      case 'upcoming':
+        scrollToRef(upcomingRef);
+        break;
+    }
+  }, [section]);
 
   /**
    * Effect: Search movies when query changes
@@ -212,13 +247,15 @@ const Index = () => {
             )}
 
             {/* Movie Category Rows */}
-            <MovieRow 
-              title="Trending Now" 
-              movies={trending} 
-              isLoading={isLoading.trending} 
-              icon="trending" 
-              onMovieClick={handleMovieClick} 
-            />
+            <div ref={trendingRef} className="scroll-mt-24">
+              <MovieRow 
+                title="Trending Now" 
+                movies={trending} 
+                isLoading={isLoading.trending} 
+                icon="trending" 
+                onMovieClick={handleMovieClick} 
+              />
+            </div>
             <MovieRow 
               title="Popular" 
               movies={popular} 
@@ -226,20 +263,24 @@ const Index = () => {
               icon="sparkles" 
               onMovieClick={handleMovieClick} 
             />
-            <MovieRow 
-              title="Top Rated" 
-              movies={topRated} 
-              isLoading={isLoading.topRated} 
-              icon="star" 
-              onMovieClick={handleMovieClick} 
-            />
-            <MovieRow 
-              title="Upcoming" 
-              movies={upcoming} 
-              isLoading={isLoading.upcoming} 
-              icon="calendar" 
-              onMovieClick={handleMovieClick} 
-            />
+            <div ref={topRatedRef} className="scroll-mt-24">
+              <MovieRow 
+                title="Top Rated" 
+                movies={topRated} 
+                isLoading={isLoading.topRated} 
+                icon="star" 
+                onMovieClick={handleMovieClick} 
+              />
+            </div>
+            <div ref={upcomingRef} className="scroll-mt-24">
+              <MovieRow 
+                title="Upcoming" 
+                movies={upcoming} 
+                isLoading={isLoading.upcoming} 
+                icon="calendar" 
+                onMovieClick={handleMovieClick} 
+              />
+            </div>
           </>
         )}
       </main>
